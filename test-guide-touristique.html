@@ -1,10 +1,215 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Guide Touristique</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #resultat {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+        #resultat.visible {
+            display: block;
+        }
+        .lieu-titre {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        .endroits {
+            margin: 15px 0;
+        }
+        .endroit-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .prix {
+            font-size: 20px;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 15px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+        }
+    </style>
 </head>
 <body>
-$END$
+<div class="container">
+    <h1>🌍 Guide Touristique</h1>
+
+    <div class="form-group">
+        <label for="lieu">Ville ou Pays :</label>
+        <input type="text" id="lieu" placeholder="Ex: Maroc, Paris, Casablanca..." value="Maroc">
+    </div>
+
+    <div class="form-group">
+        <label for="nombre">Nombre d'endroits à visiter :</label>
+        <input type="number" id="nombre" min="1" max="10" value="2">
+    </div>
+
+    <button onclick="obtenirGuide()">🔍 Obtenir le guide</button>
+
+    <div id="resultat"></div>
+</div>
+
+<script>
+    async function obtenirGuide() {
+        const lieu = document.getElementById('lieu').value.trim();
+        const nombre = document.getElementById('nombre').value;
+        const resultatDiv = document.getElementById('resultat');
+
+        if (!lieu) {
+            resultatDiv.innerHTML = '<div class="error"> Veuillez entrer un lieu</div>';
+            resultatDiv.classList.add('visible');
+            return;
+        }
+
+        // Afficher le chargement
+        resultatDiv.innerHTML = '<div class="loading"> Chargement en cours...</div>';
+        resultatDiv.classList.add('visible');
+
+
+        const contextPath = 'TP3-GuideTouristique-AlaouiKhawla-1.0-SNAPSHOT';
+        const url = `http://localhost:8080/${contextPath}/api/guide/lieu/${encodeURIComponent(lieu)}?nb=${nombre}`;
+
+        try {
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+
+            const data = await response.json();
+            afficherResultat(data);
+
+        } catch (error) {
+            resultatDiv.innerHTML = `
+                    <div class="error">
+                         Erreur lors de la requête: ${error.message}
+                        <br><br>
+                        Vérifiez que :
+                        <ul>
+                            <li>L'application est bien démarrée</li>
+                            <li>Le context-path est correct</li>
+                            <li>Les headers CORS sont bien configurés</li>
+                        </ul>
+                    </div>
+                `;
+        }
+    }
+
+    function afficherResultat(data) {
+        const resultatDiv = document.getElementById('resultat');
+
+        let endroitsHtml = '';
+        data.endroitsAVisiter.forEach((endroit, index) => {
+            endroitsHtml += `<div class="endroit-item">${index + 1}. ${endroit}</div>`;
+        });
+
+        resultatDiv.innerHTML = `
+                <div class="lieu-titre"> ${data.lieu}</div>
+                <div class="endroits">
+                    <strong>🗺️ Endroits à visiter :</strong>
+                    ${endroitsHtml}
+                </div>
+                <div class="prix">
+                     Prix moyen d'un repas : ${data.prixMoyenRepas}
+                </div>
+            `;
+        resultatDiv.classList.add('visible');
+    }
+
+    // Permettre de soumettre avec la touche Entrée
+    document.getElementById('lieu').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') obtenirGuide();
+    });
+    document.getElementById('nombre').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') obtenirGuide();
+    });
+</script>
 </body>
 </html>

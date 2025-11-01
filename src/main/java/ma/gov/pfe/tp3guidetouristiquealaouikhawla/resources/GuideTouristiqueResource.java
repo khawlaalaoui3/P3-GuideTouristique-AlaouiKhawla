@@ -28,7 +28,13 @@ public class GuideTouristiqueResource {
         // Appel au LLM
         InfosTouristiques reponse = llmClient.envoyer(villeOuPays, nb);
 
-        // Retour de la réponse avec statut HTTP OK
-        return Response.ok(reponse).build();
+        // Construction de la réponse avec headers CORS et cache
+        Response.ResponseBuilder responseBuilder = Response.ok(reponse);
+        responseBuilder.header("Access-Control-Allow-Origin", "*");
+        responseBuilder.header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+        responseBuilder.header("Pragma", "no-cache");
+        responseBuilder.header("Expires", "0");
+
+        return responseBuilder.build();
     }
 }
